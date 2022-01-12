@@ -1,4 +1,4 @@
-const { MasterApiKey } = require('./config.json');
+// const { MasterApiKey } = require('./config.json');
 
 module.exports = (req, res, next) => {
     const { ['api-key']: apiKey } = req.headers;

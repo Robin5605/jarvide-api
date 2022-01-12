@@ -14,7 +14,11 @@ function fileToJSON(file) {
     return ({
         fileID: file.fileID,
         fileName: file.filename,
-        url: file.url
+        userID: file.userID,
+        folder: file.folder,
+        create_epoch: file.create_epoch,
+        last_edit_epoch: file.last_edit_epoch,
+        url: file.url,
     });
 }
 
@@ -23,16 +27,27 @@ function warnToJSON(warn) {
         warnID: warn.warnID,
         userID: warn.userID,
         modID: warn.modID,
-        reason: warn.reason,
+        reason: warn.reason,    
+    });
+}
+
+function configToJSON(config) {
+    return({
+        guildID: config.guildID,
+        calc: config.calc,
+        github: config.github,
+        file: config.file,
+        codeblock: config.codeblock
     });
 }
 
 app.post('/file', async (req, res) => {
-    let { userID, filename, url} = req.body;
+    let { userID, filename, url } = req.query;
+    console.log(userID, filename, url)
 
     if (!userID) {
         res.status(404).send({
-            "ERROR": "Missing userID in body."
+            "ERROR": "Missing userID in params."
         });
 
         return;
@@ -40,7 +55,7 @@ app.post('/file', async (req, res) => {
     
     if (!filename) {
         res.status(404).send({
-            "ERROR": "Missing filename in body."
+            "ERROR": "Missing filename in params."
         });
 
         return;
@@ -48,11 +63,11 @@ app.post('/file', async (req, res) => {
     
     if (!url) {
         res.status(404).send({
-            "ERROR": "Missing url in body."
+            "ERROR": "Missing url in params."
         });
 
         return;
-    }
+    }       
 
     userID = parseInt(userID);
 
@@ -69,6 +84,7 @@ app.post('/file', async (req, res) => {
             userID: userID,
             filename: filename,
             url: url
+            
         }
     });
 
@@ -77,6 +93,7 @@ app.post('/file', async (req, res) => {
 
 app.get('/files', async (req, res) => {
     let { userID } = req.query;
+    console.log(userID) 
 
     if (!userID) {
         res.status(404).send({
@@ -169,11 +186,11 @@ app.delete('/file', async (req, res) => {
 });
 
 app.patch('/file', async (req, res) => {
-    let { fileID, filename, url} = req.body;
+    let { fileID, filename, url} = req.query;
 
     if (!fileID) {
         res.status(400).send({
-            "ERROR": "Missing fileID in body."
+            "ERROR": "Missing fileID in params."
         });
 
         return;
@@ -181,7 +198,7 @@ app.patch('/file', async (req, res) => {
 
     if (!filename) {
         res.status(400).send({
-            "ERROR": "Missing filename in body."
+            "ERROR": "Missing filename in params."
         });
 
         return;
@@ -189,7 +206,7 @@ app.patch('/file', async (req, res) => {
     
     if (!url) {
         res.status(400).send({
-            "ERROR": "Missing url in body."
+            "ERROR": "Missing url in params."
         });
 
         return;
@@ -267,25 +284,25 @@ app.get('/warns', async (req, res) => {
 });
 
 app.post('/warns', async (req, res) => {
-    let { userID, modID, reason } = req.body;
+    let { userID, modID, reason } = req.query;
 
     if(!userID) {
         res.status(400).send({
-            "ERROR": "Missing userID in body"
+            "ERROR": "Missing userID in params"
         });
         return
     }
 
     if(!modID) {
         res.status(400).send({
-            "ERROR": "Missing modID in body"
+            "ERROR": "Missing modID in params"
         });
         return
     }
 
     if(!reason) {
         res.status(400).send({
-            "ERROR": "Missing reason in body"
+            "ERROR": "Missing reason in params"
         });
         return
     }
@@ -309,7 +326,7 @@ app.post('/warns', async (req, res) => {
     }
 
     await prisma.warns.create({
-        data: {
+        data: { 
             userID: userID,
             modID: modID,
             reason: reason,
@@ -347,6 +364,237 @@ app.delete('/warns', async (req, res) => {
     return;
 
 });
+
+app.get('/config', async (req, res) => {
+    let { guildID } = req.query;
+    if( !guildID ) {
+        res.status(400).send({
+            "ERROR": "Missing guildID in URL parameters."
+        });
+
+        return;
+    }
+
+    guildID = parseInt(guildID)
+    if(isNaN(guildID)) {
+        res.status(400).send({
+            "ERROR": "guildID must be an INTEGER."
+        });
+
+        return;
+    }
+
+    const configs = await prisma.configs.findMany({
+        where: {guildID: guildID}
+    });
+    if(configs.length === 0) {
+        res.status(200).send({});
+        return;
+    }
+
+    res.status(200).send(
+        configs.map(configs => configToJSON(configs))
+    );
+
+    return;
+
+
+});
+
+app.post('/config', async (req, res) => {
+    let { guildID, calc = true, github = true, file = true, codeblock = true} = req.query;
+
+    if ( calc === "false" ) {
+        calc = false
+    }
+    if (github === "false") {
+        github = false
+    }
+    if (file === "false") {
+        file = false
+    }
+    if (codeblock === "false") {
+        codeblock = false
+    }   
+
+    if( !guildID ) {
+        res.status(400).send({
+            "ERROR": "Missing guildID in params"
+        }); 
+        return
+    }
+
+    if ([calc, github, file, codeblock].every(val => val === true)) {
+        res.status(400).send({
+            "ERROR": "Missing a param (needs at least calc, github, file, codeblock)"
+        }); 
+        return
+    }
+
+    guildID = parseInt(guildID);
+    if(isNaN(guildID)) {
+        res.status(400).send({
+            "ERROR": "guildID must be an INTEGER."
+        });
+
+        return;
+    }
+
+    await prisma.configs.create({
+        data: { 
+            guildID: guildID,
+            calc: calc,
+            github: github,
+            file: file,
+            codeblock: codeblock
+        }
+    });
+
+    res.sendStatus(200);
+
+    return;
+
+});
+
+app.delete('/config', async (req, res) => {
+    let { guildID } = req.query;  
+
+    if( !guildID ) {
+        res.status(400).send({
+            "ERROR": "Missing guildID in params"
+        }); 
+        return
+    }
+
+    guildID = parseInt(guildID)
+    if(isNaN(guildID)) {
+        res.status(400).send({
+            "ERROR": "guildID must be an INTEGER."
+        });
+
+        return;
+    }
+    
+    try {
+        await prisma.configs.delete({
+            where: {
+                guildID: guildID,
+            }
+        });
+
+        res.sendStatus(200);
+    } catch (err) {
+        console.log(err)
+        res.status(404).send({
+            "ERROR": "The config could not be deleted because it does not exist."
+        });
+    }
+
+    return;
+
+});
+
+app.patch('/config', async (req, res) => {
+    let { guildID, calc = null, github = null, file = null, codeblock = null} = req.query;
+
+    if ( calc === "false" ) {
+        calc = false
+    }
+    if (github === "false") {
+        github = false
+    }
+    if (file === "false") {
+        file = false
+    }
+    if (codeblock === "false") {
+        codeblock = false
+    }   
+
+    if ( calc === "true" ) {
+        calc = true
+    }
+    if (github === "true") {
+        github = true
+    }
+    if (file === "true") {
+        file = true
+    }
+    if (codeblock === "true") {
+        codeblock = true
+    }   
+
+    if( !guildID ) {
+        res.status(400).send({
+            "ERROR": "Missing guildID in params"
+        }); 
+        return
+    }
+
+    guildID = parseInt(guildID);
+
+    if(isNaN(guildID)) {
+        res.status(400).send({
+            "ERROR": "guildID must be an INTEGER."
+        });
+
+        return;
+    }
+
+    try {
+        if ( calc != null ) {
+            await prisma.configs.update({
+                where: {
+                    guildID: guildID
+                },
+                data: {
+                    calc: calc,
+                }    
+            });
+        }
+        else if ( github != null ) {
+            await prisma.configs.update({
+                where: {
+                    guildID: guildID
+                },
+                data: {
+                    github: github
+                }    
+            });
+        }
+        else if ( file != null ) {
+            await prisma.configs.update({
+                where: {
+                    guildID: guildID
+                },
+                data: {
+                    file: file
+                }    
+            });
+        }
+        else if ( codeblock != null ) {
+            await prisma.configs.update({
+                where: {
+                    guildID: guildID
+                },
+                data: {
+                    codeblock: codeblock
+                }    
+            });
+        }
+        
+    } catch (err) {
+        console.log(err)
+        res.status(404).send({
+            "ERROR": "Provided guildID was not found."
+        });
+
+        return;
+    }
+
+    res.sendStatus(200);
+});
+
+
 
 app.listen(port, () => {
     console.log(`Listening at https://localhost:${port}`);

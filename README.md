@@ -31,6 +31,10 @@ As of right now, the only technologies in use are:
     - [GET `/warns`](#get-warns)
     - [POST `/warns`](#post-warns)
     - [DELETE `/warns`](#delete-warns)
+  - [Config Endpoints](#config-endpoints)
+    - [GET `/config`](#get-config)
+    - [POST `/config`](#post-config)
+    - [DELETE `/config`](#delete-config)
 - [Examples](#examples)
 
 # General Reference <a name="ref"></a>
@@ -47,7 +51,10 @@ Example `File` object:
 {
   "fileID": "ab0915fa-271b-480b-a606-2ba9d3c2613d",
   "filename": "index.js",
-  "url": "https://www.discord.com/attachments/123456789/123456789"
+  "url": "https://www.discord.com/attachments/123456789/123456789",
+  "folder": "coding",
+  "create_epoch": 1642014105.924205,
+  "last_edit_epoch": 
 }
 ```
 
@@ -57,6 +64,16 @@ A `Warn` object contains the following properties:
 - `userID: Int`: The user who was warned
 - `modID: Int`: The moderator who issued this warning
 - `reason: String`: The reason for this warning
+
+### `Config` object <a name="config-obj"></a>
+A `Config` object contains the following properties:
+- `id` the unique identifier associated with this config
+- `guildID: Int`: The guilds id
+- `calc: Boolean` whether or not automatic calc detection triggers
+- `github: Boolean` whether or not automatic github detection triggers
+- `codeblock: Boolean` whether or not automatic codeblock detection triggers
+- `file: : Boolean` whether or not automatic file detection triggers`
+
 
 ### Errors <a name="errors"></a>
 All **4XX** error codes will always return a JSON alongside their error codes.
@@ -191,6 +208,47 @@ Removes a warn entry from the database
 - `400` - Missing a certain piece of information. The returned error will describe what went wrong.
 - `404` - The provided warnID was not found in the database and nothing was deleted
 ----------
+
+# Config endpoint <a name="config"></a>
+
+## GET `/warns` <a name="get-config"></a>
+Get all config for a given Discord server's id
+
+### URL Parameters
+- `guildID: Int` - The ID of the guild whos configuration settings should be returned
+
+### Return value: `Array<Warn>`
+Refer to the [Warn](#warn-obj) object section under the [General Refernce](#ref) heading.
+
+### Status codes
+- `200` - All information was valid and the requested information was returned
+- `400` Missing a certain piece of information. The returned error will describe what went wrong.
+----------
+## POST `/config` <a name="post-config"></a>
+Creates a new warning for the user in the database.
+
+### Body
+- `userID: Int` - The Discord ID of the user who this warn is for
+- `modID: Int` - The Discord ID of the moderator who issued this warn
+- `reason: String` - The reason for this warn
+
+### Status codes
+- `200` - All information was valid and an entry was successfully created in the database. 
+- `400` - Missing a certain piece of information. The returned error will describe what went wrong.
+----------
+## DELETE `/config` <a name="delete-config"></a>
+Removes a warn entry from the database
+
+### URL Parameters
+- `warnID: String` - The ID of the warn which to delete
+
+### Status codes
+- `200` - All information was valid and the entry was successfully removed from the database.
+- `400` - Missing a certain piece of information. The returned error will describe what went wrong.
+- `404` - The provided warnID was not found in the database and nothing was deleted
+----------
+
+
 # Examples <a name="examples"></a>
 Following are a few examples on how to use the different endpoints.
 The actual IP of the API server or the domain should be substituted for `server-ip`.
@@ -227,3 +285,4 @@ PATCH https://server-ip/file
   "url": "https://cdn.discordapp.com/attachments/844432226745057280/929190129397022750/new_index.js"
 }
 ```
+
