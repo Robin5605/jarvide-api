@@ -31,7 +31,7 @@ As of right now, the only technologies in use are:
     - [GET `/warns`](#get-warns)
     - [POST `/warns`](#post-warns)
     - [DELETE `/warns`](#delete-warns)
-  - [Config Endpoints](#config-endpoints)
+  - [Config Endpoints](#config)
     - [GET `/config`](#get-config)
     - [POST `/config`](#post-config)
     - [DELETE `/config`](#delete-config)
