@@ -351,8 +351,10 @@ app.delete('/warns', async (req, res) => {
 
 });
 
+
+
 app.get('/github', async (req, res) => {
-    let {userID, key} = req.query;
+    let { userID } = req.query;
 
     if(!userID) {
         res.status(404).send({
@@ -362,13 +364,7 @@ app.get('/github', async (req, res) => {
         return;
     }
 
-    if(!key) {
-        res.status(404).send({
-            "ERROR": "Missing key in URL parameters."
-        });
-        return;
-    }
-    const auth = await prisma.github.findUnique({
+    const token = await prisma.github.findUnique({
         where: {userID: userID}
     });
 
@@ -380,10 +376,9 @@ app.get('/github', async (req, res) => {
         return;
     }
 
-    const originalToken = aes.decrypt(auth, key).toString(crypto.enc.Utf8);
-    res.status(200).send(
-        originalToken
-    )
+    res.status(200).send({
+        "encrypted-token": token
+    });
     
 });
 
@@ -407,7 +402,6 @@ app.post('/github', async (req, res) => {
     } 
     
     userID = parseInt(userID);
-
     if(isNaN(userID)) {
         res.status(400).send({
             "ERROR": "userID must be an INTEGER."
