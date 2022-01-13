@@ -149,7 +149,7 @@ Update a file given the file ID, new file name, and new attachment URL
 ### Body
 - `fileID: String` - The ID of the file which you wish to update.
 - `filename: String` - The new name of this file.
-- `url: String`localhost:3030/warns?userID=123 - The new Discord attachment URL that points to this file.
+- `url: String` - The new Discord attachment URL that points to this file.
 
 ### Status codes
 - `200` - All information was valid and the file was successfully validated
