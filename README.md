@@ -31,6 +31,9 @@ As of right now, the only technologies in use are:
     - [GET `/warns`](#get-warns)
     - [POST `/warns`](#post-warns)
     - [DELETE `/warns`](#delete-warns)
+  - [GitHub Token Endpoints](#github)
+    - [GET `/github`](#get-github)
+    - [POST `/github`](#post-github)
 - [Examples](#examples)
 
 # General Reference <a name="ref"></a>
@@ -190,6 +193,37 @@ Removes a warn entry from the database
 - `200` - All information was valid and the entry was successfully removed from the database.
 - `400` - Missing a certain piece of information. The returned error will describe what went wrong.
 - `404` - The provided warnID was not found in the database and nothing was deleted
+----------
+# GitHub Token Endpoints <a name="github"></a>
+
+## GET `/github` <a name="get-github"></a>
+Gets the **encrypted** GitHub token associated with a user. 
+
+Note that the user's GitHub token is returned
+encrypted an no server-side decryption was done. This is to ensure man-in-the-middle (MITM) attacks cannot gain any valuable information. If someone were to do a MITM attack and gain access to the transmitted 
+information, it would be encrypted, and hence, useless without the proper key to decrypt it. 
+
+What you use to encrypt and decrypt is up to you. You can even store it in plaintext if you wish,
+though this is highly discouraged for the sake of user security.
+
+### URL Parameters
+- `userID: Int` - The Discord user ID whose GitHub token is stored.
+
+### Status codes
+- `200` - All information was valid and the database entry was successfully returned.
+- `400` - Missing a certain piece of information. The returned error will describe what went wrong.
+- `404` - The userID was not found in the database.
+
+## POST `/github` <a name="post-github"></a>
+Creates a new entry in the database relating a userID to their GitHub token. Again, you *can* technically store it as a plaintext string, but it's highly discouraged. Please POST with some type of encryption. What type of encryption is used is up to you.
+
+### Body
+- `userID: Int`: The Discord ID of the user
+- `token: String`: the **encrypted** GitHub token for this user
+
+### Status codes
+- `200` - All information was valid and the database entry was successfully returned.
+- `400` - Missing a certain piece of information. The returned error will describe what went wrong.
 ----------
 # Examples <a name="examples"></a>
 Following are a few examples on how to use the different endpoints.
