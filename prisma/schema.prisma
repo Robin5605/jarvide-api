@@ -23,3 +23,8 @@ model Warns {
   modID Int
   reason String
 }
+
+model Github {
+  userID Int @id
+  token Int 
+}

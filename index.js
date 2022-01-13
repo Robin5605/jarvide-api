@@ -7,6 +7,9 @@ const prisma = new PrismaClient();
 
 const auth = require('./auth.js');
 
+const crypto = require("crypto-js");
+const aes = require("crypto-js/aes");
+
 app.use(express.json());
 app.use(auth)
 
@@ -346,6 +349,81 @@ app.delete('/warns', async (req, res) => {
 
     return;
 
+});
+
+app.get('/github', async (req, res) => {
+    let {userID, key} = req.query;
+
+    if(!userID) {
+        res.status(404).send({
+            "ERROR": "Missing userID in URL parameters."
+        });
+
+        return;
+    }
+
+    if(!key) {
+        res.status(404).send({
+            "ERROR": "Missing key in URL parameters."
+        });
+        return;
+    }
+    const auth = await prisma.github.findUnique({
+        where: {userID: userID}
+    });
+
+    if(!auth) {
+        res.status(404).send({
+            "ERROR": "Provided userID was not found."
+        });
+
+        return;
+    }
+
+    const originalToken = aes.decrypt(auth, key).toString(crypto.enc.Utf8);
+    res.status(200).send(
+        originalToken
+    )
+    
+});
+
+app.post('/github', async (req, res) => {
+    let {userID, token} = req.body;
+
+    if (!userID) {
+        res.status(404).send({
+            "ERROR": "Missing userID in body."
+        });
+
+        return;
+    } 
+    
+    if (!token) {
+        res.status(404).send({
+            "ERROR": "Missing token in body."
+        });
+
+        return;
+    } 
+    
+    userID = parseInt(userID);
+
+    if(isNaN(userID)) {
+        res.status(400).send({
+            "ERROR": "userID must be an INTEGER."
+        });
+
+        return;
+    }
+
+    await prisma.github.create({
+        data: {
+            userID: userID,
+            token: token
+        }
+    });
+
+    res.sendStatus(200);
 });
 
 app.listen(port, () => {
