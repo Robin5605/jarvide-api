@@ -357,7 +357,7 @@ app.get('/github', async (req, res) => {
     let { userID } = req.query;
 
     if(!userID) {
-        res.status(404).send({
+        res.status(400).send({
             "ERROR": "Missing userID in URL parameters."
         });
 
@@ -383,7 +383,7 @@ app.get('/github', async (req, res) => {
 });
 
 app.post('/github', async (req, res) => {
-    let {userID, token} = req.body;
+    let { userID, token } = req.body;
 
     if (!userID) {
         res.status(404).send({
