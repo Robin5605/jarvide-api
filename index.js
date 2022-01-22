@@ -13,20 +13,20 @@ const aes = require("crypto-js/aes");
 app.use(express.json());
 app.use(auth)
 
-function fileToJSON(file) {
+function fileToJSON({ fileID, filename, url }) {
     return ({
-        fileID: file.fileID,
-        fileName: file.filename,
-        url: file.url
+        fileID,
+        filename,
+        url,
     });
 }
 
-function warnToJSON(warn) {
+function warnToJSON({ warnID, userID, modID, reason }) {
     return({
-        warnID: warn.warnID,
-        userID: warn.userID,
-        modID: warn.modID,
-        reason: warn.reason,
+        warnID,
+        userID,
+        modID,
+        reason,
     });
 }
 
@@ -69,9 +69,9 @@ app.post('/file', async (req, res) => {
 
     await prisma.files.create({
         data: {
-            userID: userID,
-            filename: filename,
-            url: url
+            userID,
+            filename,
+            url,
         }
     });
 
@@ -99,9 +99,7 @@ app.get('/files', async (req, res) => {
     }
 
     const files = await prisma.files.findMany({
-        where: {
-            userID: userID
-        }
+        where: {userID}
     })
 
     if(files.length === 0) {
@@ -128,7 +126,7 @@ app.get('/file', async (req, res) => {
     }
 
     const file = await prisma.files.findUnique({
-        where: {fileID: fileID}
+        where: {fileID}
     });
 
     if(!file) {
@@ -158,7 +156,7 @@ app.delete('/file', async (req, res) => {
 
     try {
         await prisma.files.delete({
-            where: {fileID: fileID}
+            where: {fileID}
         });
 
         res.sendStatus(200);
@@ -210,14 +208,8 @@ app.patch('/file', async (req, res) => {
 
     try {
         await prisma.files.update({
-            where: {
-                fileID: fileID
-            },
-            
-            data: {
-                filename: filename,
-                url: url
-            }
+            where: { fileID, },
+            data: { filename, url, }
         });
     } catch {
         res.status(404).send({
@@ -253,7 +245,7 @@ app.get('/warns', async (req, res) => {
     }
 
     const warns = await prisma.warns.findMany({
-        where: {userID: userID}
+        where: {userID}
     });
 
     if(warns.length === 0) {
@@ -313,9 +305,9 @@ app.post('/warns', async (req, res) => {
 
     await prisma.warns.create({
         data: {
-            userID: userID,
-            modID: modID,
-            reason: reason,
+            userID,
+            modID,
+            reason,
         }
     });
 
@@ -337,7 +329,7 @@ app.delete('/warns', async (req, res) => {
 
     try {
         await prisma.warns.delete({
-            where: {warnID: warnID}
+            where: {warnID}
         });
 
         res.sendStatus(200);
@@ -365,7 +357,7 @@ app.get('/github', async (req, res) => {
     }
 
     const token = await prisma.github.findUnique({
-        where: {userID: userID}
+        where: {userID}
     });
 
     if(!auth) {
@@ -377,7 +369,7 @@ app.get('/github', async (req, res) => {
     }
 
     res.status(200).send({
-        "encrypted-token": token
+        "token": token
     });
     
 });
@@ -412,8 +404,8 @@ app.post('/github', async (req, res) => {
 
     await prisma.github.create({
         data: {
-            userID: userID,
-            token: token
+            userID,
+            token,
         }
     });
 
