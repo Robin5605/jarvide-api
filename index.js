@@ -7,9 +7,6 @@ const prisma = new PrismaClient();
 
 const auth = require('./auth.js');
 
-const crypto = require("crypto-js");
-const aes = require("crypto-js/aes");
-
 app.use(express.json());
 app.use(auth)
 
